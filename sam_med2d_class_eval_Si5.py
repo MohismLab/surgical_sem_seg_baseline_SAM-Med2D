@@ -1,26 +1,8 @@
-"""SAM-Med2D 5-fold class-level evaluation on the Si5 external test set.
-
-Forked from sam_med2d_class_eval.py. Key differences:
-    - PRED layout:   /mnt/hdd2/task2/sam-med2d/predict_results_Si5/fold{F}_predict/
-                     boxes_prompt/{img_base}_class{c}.png  (img_base = "{pid}_C1-XXXXX")
-    - GT layout:     per-patient under
-                     /mnt/hdd2/task2/Si5/processed/sam_lora/test_{pid}/masks/
-                     {pid}_C1-XXXXX_class{c}.png   (image filename carries the
-                     {pid}_ prefix, so GT can be located by patient parsed from
-                     the prefix)
-    - HD95:          computed fresh here (no prior Si5 baseline CSV exists to
-                     merge from). Uses medpy.metric.binary.hd95 with the
-                     standard guards (skip if pred empty, skip if gt empty).
-    - Patients:      1..5 (Si5)
-    - Image space:   1024x1024 (SAM-Med2D writes pred at 1024x1024 after
-                     resizing back from 256; metric is computed in 1024 space
-                     to match the internal SAM-Med2D evaluation convention).
-
+"""
 Output:
     /mnt/hdd2/task2/sam-med2d/class_eval_results_Si5/
-        fold{F}/class_metrics.csv               (patient, img, class, iou, dice, hd95)
-        sam_med2d_class_level_5fold_Si5.csv     (5-fold summary, same columns as
-                                                 main-table compatible CSV)
+        fold{F}/class_metrics.csv               
+        sam_med2d_class_level_5fold_Si5.csv   
 """
 import os
 import sys
