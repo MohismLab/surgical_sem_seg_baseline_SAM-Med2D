@@ -38,7 +38,8 @@ class TestingDataset(Dataset):
 
         # json_file = open(os.path.join(data_path, f'label2image_{mode}.json'), "r")
         # dataset = json.load(json_file)
-        dataset = json.load(open(f'/mnt/hdd2/task2/sam-med2d/label2image_{mode}.json', "r"))
+        _label_json = os.environ.get("SAMMED2D_LABEL_JSON", f'/mnt/hdd2/task2/sam-med2d/label2image_{mode}.json')
+        dataset = json.load(open(_label_json, "r"))
         print(f"Loaded dataset with {len(dataset)} samples from {self.data_path} for mode {mode}.")
         
         self.image_paths = list(dataset.values())

@@ -53,6 +53,7 @@ def parse_args():
     parser.add_argument("--encoder_adapter", type=bool, default=True, help="use adapter")
     parser.add_argument("--prompt_path", type=str, default=None, help="fix prompt path")
     parser.add_argument("--save_pred", type=bool, default=False, help="save result")
+    parser.add_argument("--skip_metrics", action="store_true", help="skip per-sample metrics computation")
     args = parser.parse_args()
     if args.iter_point > 1:
         args.point_num = 1
@@ -216,23 +217,29 @@ def main(args):
         loss = criterion(masks, ori_labels, iou_predictions)
         test_loss.append(loss.item())
 
-        test_batch_metrics = SegMetrics(masks, ori_labels, all_metrics)
-        test_batch_metrics = [float('{:.4f}'.format(metric)) for metric in test_batch_metrics]
+        if not args.skip_metrics:
+            test_batch_metrics = SegMetrics(masks, ori_labels, all_metrics)
+            test_batch_metrics = [float('{:.4f}'.format(metric)) for metric in test_batch_metrics]
 
-        for j, metric_name in enumerate(all_metrics):
-            patient_metrics[patient_id][metric_name].append(test_batch_metrics[j])
+            for j, metric_name in enumerate(all_metrics):
+                patient_metrics[patient_id][metric_name].append(test_batch_metrics[j])
   
+    average_loss = np.mean(test_loss)
+    if args.prompt_path is None:
+        with open(os.path.join(args.work_dir,f'{args.image_size}_prompt.json'), 'w') as f:
+            json.dump(prompt_dict, f, indent=2)
+
+    if args.skip_metrics:
+        print(f"\nTest loss: {average_loss:.4f} (per-sample metrics skipped; "
+              f"recomputed by the external-validation wrapper)")
+        return
+
     test_metrics = {}
     for metric_name in all_metrics:
         all_values = []
         for pid in patient_metrics:
             all_values.extend(patient_metrics[pid][metric_name])
         test_metrics[metric_name] = '{:.4f}'.format(np.nanmean(all_values))
-
-    average_loss = np.mean(test_loss)
-    if args.prompt_path is None:
-        with open(os.path.join(args.work_dir,f'{args.image_size}_prompt.json'), 'w') as f:
-            json.dump(prompt_dict, f, indent=2)
 
     print("\n" + "="*80)
     print(f"Overall Test Results")
